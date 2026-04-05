@@ -1,76 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS | Core Intelligence</title>
+    <meta charset="UTF-8"><title>NEXUS | Core Intelligence</title>
     <style>
-        :root { --nexus-red: #ff0033; --nexus-black: #050505; --accent: var(--nexus-red); --border: rgba(255, 0, 51, 0.3); --bg-glass: rgba(255, 255, 255, 0.03); --overlay-bg: rgba(5, 5, 5, 0.98); }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--nexus-black); color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        #security-gate { position: fixed; inset: 0; background: var(--overlay-bg); z-index: 9999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
-        .gate-box { border: 1px solid var(--accent); padding: 40px; text-align: center; background: #000; width: 350px; }
-        #nexus-nav { background: #0d0d0d; border-bottom: 3px solid var(--accent); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
-        #core-container { flex: 1; display: flex; overflow: hidden; position: relative; }
-        #sidebar { width: 300px; background: #080808; border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; gap: 20px; }
-        .module { background: #000; border: 1px solid var(--border); padding: 15px; border-left: 4px solid var(--accent); }
-        .label { font-size: 10px; color: var(--accent); font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
-        #chat-viewport { flex: 1; display: flex; flex-direction: column; padding: 20px; background: #050505; }
-        #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 20px; background: var(--bg-glass); }
-        .msg { max-width: 85%; padding: 12px 18px; border-radius: 12px; font-size: 14px; }
-        .user { align-self: flex-end; background: var(--accent); color: white; }
-        .bot { align-self: flex-start; background: #1a1a1a; border-left: 3px solid var(--accent); }
-        #input-area { display: flex; gap: 10px; padding: 10px 20px; background: #0d0d0d; border-radius: 30px; border: 1px solid #222; }
-        input { flex: 1; background: transparent; border: none; color: white; outline: none; }
-        button { background: var(--accent); border: none; color: white; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+        :root { --accent: #00f2ff; --bg: #020202; --border: rgba(0, 242, 255, 0.2); }
+        body { font-family: sans-serif; background: var(--bg); color: #fff; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        nav { background: #080808; border-bottom: 2px solid var(--accent); padding: 15px; display: flex; justify-content: space-between; }
+        #container { display: flex; flex: 1; }
+        aside { width: 250px; background: #050505; border-right: 1px solid var(--border); padding: 20px; }
+        .module { background: #000; border: 1px solid var(--border); padding: 10px; border-top: 2px solid var(--accent); }
+        .label { font-size: 10px; color: var(--accent); text-transform: uppercase; }
+        input, button { width: 100%; background: #111; border: 1px solid var(--accent); color: white; padding: 5px; margin-top: 5px; }
+        button { background: var(--accent); color: #000; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div id="security-gate">
-        <div class="gate-box">
-            <h2 style="letter-spacing:8px; color:var(--nexus-red); margin-bottom:20px;">NEXUS ACCESS</h2>
-            <input type="password" id="gatePass" placeholder="ENTER CODE" style="width:100%; background:#111; border:1px solid #333; color:#fff; padding:10px; text-align:center; margin-bottom:20px;">
-            <button id="gateBtn" style="width:100%;">AUTHORIZE</button>
-        </div>
-    </div>
-    <nav id="nexus-nav"><h1>NEXUS</h1><div id="uplink-status" style="font-size: 10px; color: #444;">UPLINK: OFFLINE</div></nav>
-    <div id="core-container">
-        <aside id="sidebar">
-            <div class="module"><span class="label">Neural Uplink</span>
-                <div id="sidebar-gate">
-                    <input type="password" id="sideGatePass" placeholder="Security Code..." style="width:100%; background:#111; border:1px solid #333; color:#fff; padding:8px; font-size:10px; margin: 8px 0;">
-                    <button id="sideGateBtn" style="width:100%; background:transparent; border:1px solid var(--accent); color:var(--accent);">UNLOCK API</button>
-                </div>
-                <div id="api-box" style="display:none; margin-top:10px;">
-                    <input type="password" id="keyInput" placeholder="Enter API Key..." style="width:100%; background:#111; border:1px solid #333; color:#fff; padding:8px; font-size:10px; margin: 8px 0;">
-                    <button id="saveKey" style="width:100%;">SAVE KEY</button>
-                </div>
+    <nav><h1>NEXUS</h1></nav>
+    <div id="container">
+        <aside>
+            <div class="module">
+                <div class="label">API Key</div>
+                <input type="password" id="keyInput">
+                <div class="label" style="margin-top:10px;">Clearance Code (20c)</div>
+                <input type="password" id="sidePass">
+                <button>SUBMIT</button>
             </div>
         </aside>
-        <main id="chat-viewport">
-            <div id="chat-window"><div class="msg bot">Nexus secured. Enter clearance code.</div></div>
-            <div id="input-area"><input type="text" id="userInput" placeholder="Initialize command..." autocomplete="off"><button id="sendBtn">SEND</button></div>
-        </main>
     </div>
-    <script>
-        let API_KEY = localStorage.getItem('NEXUS_KEY') || "";
-        const check = (v) => v.toLowerCase().trim() === '20c';
-        document.getElementById('gateBtn').onclick = () => { if(check(document.getElementById('gatePass').value)) document.getElementById('security-gate').style.display='none'; };
-        document.getElementById('sideGateBtn').onclick = () => { if(check(document.getElementById('sideGatePass').value)) { document.getElementById('sidebar-gate').style.display='none'; document.getElementById('api-box').style.display='block'; } };
-        document.getElementById('saveKey').onclick = () => { API_KEY = document.getElementById('keyInput').value.trim(); localStorage.setItem('NEXUS_KEY', API_KEY); document.getElementById('uplink-status').innerText = "UPLINK: ACTIVE"; document.getElementById('uplink-status').style.color = "var(--nexus-red)"; };
-        async function send() {
-            const val = document.getElementById('userInput').value; if(!val || !API_KEY) return;
-            const chat = document.getElementById('chat-window');
-            const u = document.createElement('div'); u.className='msg user'; u.innerText=val; chat.appendChild(u);
-            document.getElementById('userInput').value='';
-            try {
-                const r = await fetch("https://openrouter.ai", { method:"POST", headers:{"Authorization":`Bearer ${API_KEY}`,"Content-Type":"application/json"}, body:JSON.stringify({"model":"google/gemma-7b-it:free","messages":[{"role":"user","content":val}]}) });
-                const d = await r.json();
-                const b = document.createElement('div'); b.className='msg bot'; b.innerText=d.choices.message.content; chat.appendChild(b);
-            } catch(e) {}
-            chat.scrollTop = chat.scrollHeight;
-        }
-        document.getElementById('sendBtn').onclick = send;
-    </script>
 </body>
 </html>
