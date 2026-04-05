@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS | Core Intelligence</title>
+    <style>
+        :root { 
+            --nexus-red: #ff0033; 
+            --nexus-black: #050505; 
+            --accent: var(--nexus-red); 
+            --border: rgba(255, 0, 51, 0.3); 
+            --bg-glass: rgba(255, 255, 255, 0.03);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background-color: var(--nexus-black); 
+            color: #fff; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+
+        /* Animations */
+        @keyframes heartbeat { 
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px var(--accent)); } 
+            50% { transform: scale(1.08); filter: drop-shadow(0 0 15px var(--accent)); } 
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        /* Layout */
+        #nexus-nav { 
+            background: #0d0d0d; 
+            border-bottom: 3px solid var(--accent); 
+            padding: 15px 40px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            z-index: 10;
+        }
+
+        .nexus-logo { width: 45px; height: 45px; animation: heartbeat 3s infinite; }
+
+        #core-container { flex: 1; display: flex; overflow: hidden; position: relative; }
+        
+        /* Scanline Overlay */
+        #core-container::after {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, transparent 50%, rgba(255,0,0,0.02) 50%);
+            background-size: 100% 4px; pointer-events: none; z-index: 5;
+        }
+
+        #sidebar { 
+            width: 300px; background: #080808; border-right: 1px solid var(--border); 
+            padding: 25px; display: flex; flex-direction: column; gap: 20px; z-index: 6;
+        }
+
+        .module { 
+            background: #000; border: 1px solid var(--border); padding: 15px; 
+            border-left: 4px solid var(--accent); transition: background 0.3s;
+        }
+        .module:hover { background: rgba(255,0,0,0.05); }
+
+        .label { font-size: 10px; color: var(--accent); font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
+
+        #chat-viewport { flex: 1; display: flex; flex-direction: column; padding: 20px; background: #050505; z-index: 6; }
+
+        /* Scrollbar styling */
+        #chat-window::-webkit-scrollbar { width: 4px; }
+        #chat-window::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+        #chat-window { 
+            flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; 
+            gap: 15px; border: 1px solid var(--border); border-radius: 8px; 
+            margin-bottom: 20px; background: var(--bg-glass); scroll-behavior: smooth;
+        }
+
+        .msg { max-width: 85%; padding: 12px 18px; border-radius: 12px; font-size: 14px; line-height: 1.6; word-wrap: break-word; }
+        .user { align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 2px; box-shadow: 0 4px 15px rgba(255,0,51,0.2); }
+        .bot { align-self: flex-start; background: #1a1a1a; border-bottom-left-radius: 2px; border-left: 3px solid var(--accent); }
+
+        #input-area { display: flex; gap: 10px; padding: 10px 20px; background: #0d0d0d; border-radius: 30px; border: 1px solid #222; }
+        input { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 14px; }
+        
+        button { 
+            background: var(--accent); border: none; color: white; padding: 8px 20px; 
+            border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 11px; 
+            text-transform: uppercase; transition: opacity 0.2s;
+        }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-secondary { background: transparent; border: 1px solid var(--accent); color: var(--accent); margin-top: 10px; }
+
+        footer { background: #000; border-top: 1px solid var(--border); padding: 10px 40px; font-size: 10px; color: rgba(255,255,255,0.4); text-align: center; }
+    </style>
+</head>
+<body>
+
+    <nav id="nexus-nav">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <svg class="nexus-logo" viewBox="0 0 100 100"><path d="M35 75 L35 25 L65 75 L65 25" fill="none" stroke="#ff0033" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            <h1 style="letter-spacing:10px; text-transform:uppercase; font-size: 1.5rem;">Nexus</h1>
+        </div>
+        <div id="uplink-status" style="font-size: 10px; color: #444; font-weight: bold;">UPLINK: OFFLINE</div>
+    </nav>
+
+    <div id="core-container">
+        <aside id="sidebar">
+            <div class="module">
+                <span class="label">System Clock</span>
+                <div id="clock" style="text-align:center; font-family:monospace; font-size:1.2rem; margin-top:5px; color: var(--accent);">00:00:00</div>
+            </div>
+            
+            <div class="module">
+                <span class="label">Neural Uplink</span>
+                <input type="password" id="keyInput" placeholder="Enter OpenRouter Key..." style="width:100%; background:#111; border:1px solid #333; color:#fff; padding:8px; font-size:10px; margin: 8px 0;">
+                <button id="saveKey" style="width:100%;">AUTHORIZE</button>
+            </div>
+
+            <div class="module">
+                <span class="label">Terminal Controls</span>
+                <button id="clearChat" class="btn-secondary" style="width:100%;">SYSTEM OVERRIDE (CLEAR)</button>
+            </div>
+
+            <div class="module" style="flex:1;">
+                <span class="label">Cache Memory</span>
+                <textarea id="cacheNotes" style="width:100%; height:90%; background:transparent; color:#aaa; border:none; outline:none; resize:none; font-size: 12px; margin-top:10px;" placeholder="Secure notes..."></textarea>
+            </div>
+        </aside>
+
+        <main id="chat-viewport">
+            <div id="chat-window">
+                <div class="msg bot">Nexus Core initialized. Authorize your OpenRouter API key in the sidebar to establish uplink.</div>
+            </div>
+            <div id="input-area">
+                <input type="text" id="userInput" placeholder="Initialize command..." autocomplete="off">
+                <button id="sendBtn">SEND</button>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        &copy; 2024 NEXUS CORE INTELLIGENCE. ALL RIGHTS RESERVED. // VERSION 1.0.4
+    </footer>
+
+    <script>
+        // Use the correct v1 endpoint for Chat Completions
+        const API_URL = "https://openrouter.ai";
+        let API_KEY = localStorage.getItem('NEXUS_KEY') || "";
+
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const keyInput = document.getElementById('keyInput');
+        const statusText = document.getElementById('uplink-status');
+
+        // Initial key check
+        if(API_KEY) {
+            keyInput.value = "********";
+            statusText.innerText = "UPLINK: ACTIVE";
+            statusText.style.color = "var(--nexus-red)";
+        }
+
+        function appendMessage(text, type) {
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            div.innerText = text;
+            chatWindow.appendChild(div);
+            // Smooth auto-scroll to the newest message
+            chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
+            return div;
+        }
+
+        // Save Key Logic
+        document.getElementById('saveKey').addEventListener('click', () => {
+            const newKey = keyInput.value.trim();
+            if(newKey && newKey !== "********") {
+                localStorage.setItem('NEXUS_KEY', newKey);
+                API_KEY = newKey;
+                statusText.innerText = "UPLINK: ACTIVE";
+                statusText.style.color = "var(--nexus-red)";
+                alert("UPLINK AUTHORIZED.");
+            }
+        });
+
+        // Clear Chat Logic
+        document.getElementById('clearChat').addEventListener('click', () => {
+            chatWindow.innerHTML = '<div class="msg bot">Terminal memory cleared. System ready.</div>';
+        });
+
+        // Core Send Logic
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text || sendBtn.disabled) return;
+            
+            if (!API_KEY) {
+                appendMessage("Error: Neural Uplink required. Please enter API key.", 'bot');
+                return;
+            }
+
+            appendMessage(text, 'user');
+            userInput.value = '';
+            sendBtn.disabled = true;
+            
+            const loadingMsg = appendMessage("Nexus is calculating...", 'bot');
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { 
+                        "Authorization": `Bearer ${API_KEY}`, 
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": window.location.href, // Required by OpenRouter
+                        "X-Title": "Nexus Core UI"
+                    },
+                    body: JSON.stringify({
+                        model: "openrouter/auto", // Uses the best available model automatically
+                        messages: [{ role: "user", content: text }]
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    loadingMsg.innerText = `Error: ${data.error.message}`;
+                } else {
+                    loadingMsg.innerText = data.choices[0].message.content;
+                }
+
+            } catch (error) {
+                loadingMsg.innerText = "Error: Uplink connection failed. Check your network or API status.";
+                console.error(error);
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+
+        // Event Listeners
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+        
+        // System Clock
+        setInterval(() => { 
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB'); 
+        }, 1000);
+    </script>
+</body>
+</html>
